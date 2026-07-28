@@ -25,7 +25,7 @@ PyTorch implementation for CRAFT text detector that effectively detect text area
 - Install using pip:
 
 ```console
-pip install craft-text-detector
+pip install git+https://github.com/moujikov/craft-text-detector.git
 ```
 
 ### Basic Usage
