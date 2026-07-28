@@ -1,6 +1,7 @@
 import unittest
 
-from craft_text_detector import Craft
+from craft_text_detector import Craft, read_image
+from tests import get_current_test_output
 
 
 class TestCraftTextDetector(unittest.TestCase):
@@ -44,9 +45,9 @@ class TestCraftTextDetector(unittest.TestCase):
     def test_load_refinenet_model(self):
         # init craft
         craft = Craft(
-            output_dir=None,
+            output_dir=get_current_test_output(),
             rectify=True,
-            export_extra=False,
+            export_extra=True,
             text_threshold=0.7,
             link_threshold=0.4,
             low_text=0.4,
@@ -64,9 +65,9 @@ class TestCraftTextDetector(unittest.TestCase):
     def test_detect_text(self):
         # init craft
         craft = Craft(
-            output_dir=None,
+            output_dir=get_current_test_output(),
             rectify=True,
-            export_extra=False,
+            export_extra=True,
             text_threshold=0.7,
             link_threshold=0.4,
             low_text=0.4,
@@ -83,11 +84,12 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(len(prediction_result["boxes"][0][0]), 2)
         self.assertEqual(int(prediction_result["boxes"][0][0][0]), 115)
 
+    def test_detect_text_refiner(self):
         # init craft
         craft = Craft(
-            output_dir=None,
+            output_dir=get_current_test_output(),
             rectify=True,
-            export_extra=False,
+            export_extra=True,
             text_threshold=0.7,
             link_threshold=0.4,
             low_text=0.4,
@@ -104,11 +106,12 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(len(prediction_result["boxes"][0][0]), 2)
         self.assertEqual(int(prediction_result["boxes"][0][2][0]), 661)
 
+    def test_detect_text_boxes(self):
         # init craft
         craft = Craft(
-            output_dir=None,
+            output_dir=get_current_test_output(),
             rectify=False,
-            export_extra=False,
+            export_extra=True,
             text_threshold=0.7,
             link_threshold=0.4,
             low_text=0.4,
@@ -125,11 +128,12 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(len(prediction_result["boxes"][0][0]), 2)
         self.assertEqual(int(prediction_result["boxes"][0][2][0]), 244)
 
+    def test_detect_text_boxes_refiner(self):
         # init craft
         craft = Craft(
-            output_dir=None,
+            output_dir=get_current_test_output(),
             rectify=False,
-            export_extra=False,
+            export_extra=True,
             text_threshold=0.7,
             link_threshold=0.4,
             low_text=0.4,
@@ -145,6 +149,32 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(len(prediction_result["boxes"][0]), 4)
         self.assertEqual(len(prediction_result["boxes"][0][0]), 2)
         self.assertEqual(int(prediction_result["boxes"][0][2][0]), 661)
+
+
+    def test_detect_text_from_loaded_image(self):
+        # init craft
+        craft = Craft(
+            output_dir=get_current_test_output(),
+            rectify=True,
+            export_extra=True,
+            text_threshold=0.7,
+            link_threshold=0.4,
+            low_text=0.4,
+            cuda=False,
+            long_size=720,
+            refiner=False,
+            crop_type="poly",
+        )
+        # load image
+        image = read_image(self.image_path)
+        
+        # detect text
+        prediction_result = craft.detect_text(image=image)
+
+        self.assertEqual(len(prediction_result["boxes"]), 52)
+        self.assertEqual(len(prediction_result["boxes"][0]), 4)
+        self.assertEqual(len(prediction_result["boxes"][0][0]), 2)
+        self.assertEqual(int(prediction_result["boxes"][0][0][0]), 115)
 
 
 if __name__ == "__main__":
