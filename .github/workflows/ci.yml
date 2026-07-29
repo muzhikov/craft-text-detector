@@ -27,7 +27,17 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
         cache: 'pip'
-    - run: pip install -r requirements.txt
+
+    - name: Install PyTorch on Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: pip install torch==2.13.0+cpu torchvision==0.28.0+cpu --index-url https://download.pytorch.org/whl/cpu
+
+    - name: Install PyTorch on MacOS and Windows
+      if: matrix.os == 'macos-latest' || matrix.os == 'windows-latest'
+      run: pip install torch==2.13.0 torchvision==0.28.0
+
+    - name: Install requirements
+      run: pip install -r requirements.txt
 
     - name: Restore HuggingFace hub cache (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
