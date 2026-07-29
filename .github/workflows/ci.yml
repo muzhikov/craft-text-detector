@@ -13,14 +13,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: [3.14]
+        python: [3.10, 3.11, 3.12, 3.13, 3.14]
       fail-fast: false
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python }}
     - name: Restore pip cache (Ubuntu)
@@ -41,21 +41,27 @@ jobs:
       uses: actions/cache@v6
       if: matrix.os == 'windows-latest'
       with:
-        path: ~\AppData\Local\pip\Cache
+        path: '%LOCALAPPDATA%\pip\Cache'
         key: ${{ matrix.os }}-pip-${{ matrix.python }}-${{ hashFiles('**/setup.py')}}
         restore-keys: ${{ matrix.os }}-pip-${{ matrix.python }}-
-    - name: Restore HuggingFace hub cache (Unix)
-      if: matrix.os != 'windows-latest'
+    - name: Restore HuggingFace hub cache (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/cache@v6
       with:
         path: ~/.cache/huggingface/hub
-        key: unix-hf-hub
+        key: ${{ matrix.os }}-hf-hub
+    - name: Restore HuggingFace hub cache (MacOS)
+      if: matrix.os == 'macos-latest'
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/huggingface/hub
+        key: ${{ matrix.os }}-hf-hub
     - name: Restore HuggingFace hub cache (Windows)
       if: matrix.os == 'windows-latest'
       uses: actions/cache@v6
       with:
-        path: ~\.cache\huggingface_cache\hub
-        key: windows-hf-hub
+        path: '%USERPROFILE%\.cache\huggingface\hub'
+        key: ${{ matrix.os }}-hf-hub
     - name: Update pip
       run: python -m pip install --upgrade pip
     - name: Install PyTorch on Linux and Windows
