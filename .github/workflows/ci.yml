@@ -8,42 +8,25 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: [3.10, 3.11, 3.12, 3.13, 3.14]
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14']
       fail-fast: false
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - name: Checkout
       uses: actions/checkout@v7
+      
     - name: Set up Python
       uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python }}
-    - name: Restore pip cache (Ubuntu)
-      uses: actions/cache@v6
-      if: matrix.os == 'ubuntu-latest'
-      with:
-        path: ~/.cache/pip
-        key: ${{ matrix.os }}-pip-${{ matrix.python }}-${{ hashFiles('**/setup.py')}}
-        restore-keys: ${{ matrix.os }}-pip-${{ matrix.python }}-
-    - name: Restore pip cache (MacOS)
-      uses: actions/cache@v6
-      if:  matrix.os == 'macos-latest'
-      with:
-        path: ~/Library/Caches/pip
-        key: ${{ matrix.os }}-pip-${{ matrix.python }}-${{ hashFiles('**/setup.py')}}
-        restore-keys: ${{ matrix.os }}-pip-${{ matrix.python }}-
-    - name: Restore pip cache (Windows)
-      uses: actions/cache@v6
-      if: matrix.os == 'windows-latest'
-      with:
-        path: '%LOCALAPPDATA%\pip\Cache'
-        key: ${{ matrix.os }}-pip-${{ matrix.python }}-${{ hashFiles('**/setup.py')}}
-        restore-keys: ${{ matrix.os }}-pip-${{ matrix.python }}-
+        cache: 'pip'
+    - run: pip install -r requirements.txt
+
     - name: Restore HuggingFace hub cache (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       uses: actions/cache@v6
@@ -60,23 +43,9 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: actions/cache@v6
       with:
-        path: '%USERPROFILE%\.cache\huggingface\hub'
+        path: ~\.cache\huggingface\hub
         key: ${{ matrix.os }}-hf-hub
-    - name: Update pip
-      run: python -m pip install --upgrade pip
-    - name: Install PyTorch on Linux and Windows
-      if: >
-        matrix.os == 'ubuntu-latest' ||
-        matrix.os == 'windows-latest'
-      run: >
-        pip install torch==2.13.0+cpu torchvision==0.28.0+cpu --index-url https://download.pytorch.org/whl/cpu
-    - name: Install PyTorch on MacOS
-      if: matrix.os == 'macos-latest'
-      run: pip install torch==2.13.0 torchvision==0.28.0
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -84,6 +53,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
     - name: Test with unittest
       run: |
         python -m unittest
