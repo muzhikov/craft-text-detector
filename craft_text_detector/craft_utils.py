@@ -7,14 +7,12 @@ from typing import Optional, Union
 import cv2
 import numpy as np
 
+from huggingface_hub import hf_hub_download
+
 import craft_text_detector.file_utils as file_utils
 import craft_text_detector.torch_utils as torch_utils
 
-CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
-REFINENET_GDRIVE_URL = (
-    "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
-)
-
+HF_REPO = 'muzhikov/CRAFT-text-detector'
 
 # unwarp corodinates
 def warpCoord(Minv, pt):
@@ -38,30 +36,13 @@ def load_craftnet_model(
         cuda: bool = False,
         weight_path: Optional[Union[str, Path]] = None
 ):
-    # get craft net path
     if weight_path is None:
-        home_path = str(Path.home())
-        weight_path = Path(
-            home_path,
-            ".craft_text_detector",
-            "weights",
-            "craft_mlt_25k.pth"
-        )
-    weight_path = Path(weight_path).resolve()
-    weight_path.parent.mkdir(exist_ok=True, parents=True)
-    weight_path = str(weight_path)
+        weight_path = hf_hub_download(repo_id=HF_REPO, filename="craft_mlt_25k.pth")
 
     # load craft net
     from craft_text_detector.models.craftnet import CraftNet
 
     craft_net = CraftNet()  # initialize
-
-    # check if weights are already downloaded, if not download
-    url = CRAFT_GDRIVE_URL
-    if not os.path.isfile(weight_path):
-        print("Craft text detector weight will be downloaded to {}".format(weight_path))
-
-        file_utils.download(url=url, save_path=weight_path)
 
     # arange device
     if cuda:
@@ -82,30 +63,13 @@ def load_refinenet_model(
         cuda: bool = False,
         weight_path: Optional[Union[str, Path]] = None
 ):
-    # get refine net path
     if weight_path is None:
-        home_path = Path.home()
-        weight_path = Path(
-            home_path,
-            ".craft_text_detector",
-            "weights",
-            "craft_refiner_CTW1500.pth"
-        )
-    weight_path = Path(weight_path).resolve()
-    weight_path.parent.mkdir(exist_ok=True, parents=True)
-    weight_path = str(weight_path)
+        weight_path = hf_hub_download(repo_id=HF_REPO, filename="craft_refiner_CTW1500.pth")
 
     # load refine net
     from craft_text_detector.models.refinenet import RefineNet
 
     refine_net = RefineNet()  # initialize
-
-    # check if weights are already downloaded, if not download
-    url = REFINENET_GDRIVE_URL
-    if not os.path.isfile(weight_path):
-        print("Craft text refiner weight will be downloaded to {}".format(weight_path))
-
-        file_utils.download(url=url, save_path=weight_path)
 
     # arange device
     if cuda:
