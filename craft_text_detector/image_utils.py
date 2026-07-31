@@ -3,29 +3,35 @@ Copyright (c) 2019-present NAVER Corp.
 MIT License
 """
 
+from pathlib import Path
+
 import cv2
 import numpy as np
+import PIL.Image
 
 
 def read_image(image):
-    if type(image) == str:
-        img = cv2.imread(image)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    if isinstance(image, (str, Path)):
+        image = cv2.imread(image)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    elif isinstance(image, PIL.Image.Image):
+        image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
     elif type(image) == bytes:
         nparr = np.frombuffer(image, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     elif type(image) == np.ndarray:
         if len(image.shape) == 2:  # grayscale
-            img = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         elif len(image.shape) == 3 and image.shape[2] == 3:
-            img = image
+            image = image
         elif len(image.shape) == 3 and image.shape[2] == 4:  # RGBAscale
-            img = image[:, :, :3]
+            image = image[:, :, :3]
 
-    return img
+    return image
 
 
 def normalizeMeanVariance(
