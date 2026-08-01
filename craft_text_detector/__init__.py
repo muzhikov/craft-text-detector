@@ -106,7 +106,7 @@ class Craft:
         self.refine_net = None
         empty_cuda_cache()
 
-    def detect_text(self, image, image_path=None):
+    def detect_text(self, image):
         """
         Arguments:
             image: path to the image to be processed or numpy array or PIL image
@@ -122,10 +122,6 @@ class Craft:
                 "times": elapsed times of the sub modules, in seconds
             }
         """
-
-        if image_path is not None:
-            print("Argument 'image_path' is deprecated, use 'image' instead.")
-            image = image_path
 
         # perform prediction
         prediction_result = get_prediction(
