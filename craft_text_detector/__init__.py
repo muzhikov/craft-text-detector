@@ -169,6 +169,7 @@ class Craft:
                 export_extra_results(
                     image=image,
                     regions=regions,
+                    times = prediction_result["times"],
                     heatmaps=prediction_result["heatmaps"],
                     file_name=file_name,
                     output_dir=self.output_dir,

@@ -205,6 +205,7 @@ def export_extra_results(
     image,
     regions,
     heatmaps,
+    times,
     file_name: str = "image",
     output_dir="output/",
     verticals=None,
@@ -225,6 +226,7 @@ def export_extra_results(
 
     # result directory
     res_file = os.path.join(output_dir, file_name + "_text_detection.txt")
+    times_file = os.path.join(output_dir, file_name + "_times.txt")
     res_img_file = os.path.join(output_dir, file_name + "_text_detection.png")
     text_heatmap_file = os.path.join(output_dir, file_name + "_text_score_heatmap.png")
     link_heatmap_file = os.path.join(output_dir, file_name + "_link_score_heatmap.png")
@@ -272,6 +274,11 @@ def export_extra_results(
                     (0, 255, 255),
                     thickness=1,
                 )
+
+    with open(times_file, "w") as f:
+        for key, value in times.items():
+            f.write(f"{key}: {value:.6f}\n")
+        f.write(f"TOTAL_TIME: {sum(times.values()):.6f}\n")
 
     # Save result image
     cv2.imwrite(res_img_file, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
