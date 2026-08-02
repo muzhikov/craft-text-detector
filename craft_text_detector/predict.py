@@ -4,6 +4,7 @@ import time
 import cv2
 import numpy as np
 
+from craft_text_detector import Device
 import craft_text_detector.craft_utils as craft_utils
 import craft_text_detector.image_utils as image_utils
 import craft_text_detector.torch_utils as torch_utils
@@ -16,7 +17,7 @@ def get_prediction(
     text_threshold: float = 0.7,
     link_threshold: float = 0.4,
     low_text: float = 0.4,
-    cuda: bool = False,
+    device: Device = Device.CPU,
     long_size: int = 1280,
     poly: bool = True,
 ):
@@ -58,8 +59,10 @@ def get_prediction(
     x = image_utils.normalizeMeanVariance(img_resized)
     x = torch_utils.from_numpy(x).permute(2, 0, 1)  # [h, w, c] to [c, h, w]
     x = torch_utils.Variable(x.unsqueeze(0))  # [c, h, w] to [b, c, h, w]
-    if cuda:
+    if device == Device.CUDA:
         x = x.cuda()
+    elif device == Device.MPS:
+        x = x.to('mps')
     preprocessing_time = time.time() - t0
     t0 = time.time()
 

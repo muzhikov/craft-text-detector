@@ -9,6 +9,7 @@ import numpy as np
 
 from huggingface_hub import hf_hub_download
 
+from craft_text_detector import Device
 import craft_text_detector.file_utils as file_utils
 import craft_text_detector.torch_utils as torch_utils
 
@@ -33,7 +34,7 @@ def copyStateDict(state_dict):
 
 
 def load_craftnet_model(
-        cuda: bool = False,
+        device: Device = Device.CPU,
         weight_path: Optional[Union[str, Path]] = None
 ):
     if weight_path is None:
@@ -45,22 +46,24 @@ def load_craftnet_model(
     craft_net = CraftNet()  # initialize
 
     # arange device
-    if cuda:
+    if device == Device.CUDA:
         craft_net.load_state_dict(copyStateDict(torch_utils.load(weight_path)))
-
         craft_net = craft_net.cuda()
         craft_net = torch_utils.DataParallel(craft_net)
         torch_utils.cudnn_benchmark = False
-    else:
-        craft_net.load_state_dict(
-            copyStateDict(torch_utils.load(weight_path, map_location="cpu"))
-        )
-    craft_net.eval()
-    return craft_net
+    elif device == Device.MPS:
+        state_dict = copyStateDict(torch_utils.load(weight_path, map_location='mps'))
+        craft_net = craft_net.to('mps')
+        craft_net.load_state_dict(state_dict)
+    else:   # Device.CPU
+        state_dict = copyStateDict(torch_utils.load(weight_path, map_location='cpu'))
+        craft_net.load_state_dict(state_dict)
+
+    return craft_net.eval()
 
 
 def load_refinenet_model(
-        cuda: bool = False,
+        device: Device = Device.CPU,
         weight_path: Optional[Union[str, Path]] = None
 ):
     if weight_path is None:
@@ -72,18 +75,21 @@ def load_refinenet_model(
     refine_net = RefineNet()  # initialize
 
     # arange device
-    if cuda:
+    if device == Device.CUDA:
         refine_net.load_state_dict(copyStateDict(torch_utils.load(weight_path)))
 
         refine_net = refine_net.cuda()
         refine_net = torch_utils.DataParallel(refine_net)
         torch_utils.cudnn_benchmark = False
-    else:
-        refine_net.load_state_dict(
-            copyStateDict(torch_utils.load(weight_path, map_location="cpu"))
-        )
-    refine_net.eval()
-    return refine_net
+    elif device == Device.MPS:
+        state_dict = copyStateDict(torch_utils.load(weight_path, map_location='mps'))
+        refine_net = refine_net.to('mps')
+        refine_net.load_state_dict(state_dict)
+    else:   # Device.CPU
+        state_dict = copyStateDict(torch_utils.load(weight_path, map_location='cpu'))
+        refine_net.load_state_dict(state_dict)
+
+    return refine_net.eval()
 
 
 def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text):

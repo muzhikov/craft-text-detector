@@ -1,7 +1,14 @@
 from __future__ import absolute_import
 
 import os
+import torch
 from typing import Optional
+
+from enum import Enum
+class Device(Enum):
+    CPU = 'cpu'
+    CUDA = 'cuda'
+    MPS = 'mps'
 
 import craft_text_detector.craft_utils as craft_utils
 import craft_text_detector.file_utils as file_utils
@@ -41,12 +48,12 @@ class Craft:
         text_threshold=0.7,
         link_threshold=0.4,
         low_text=0.4,
-        cuda=False,
         long_size=1280,
         refiner=True,
         crop_type="poly",
         weight_path_craft_net: Optional[str] = None,
         weight_path_refine_net: Optional[str] = None,
+        force_device: Optional[str | Device] = None
     ):
         """
         Arguments:
@@ -56,10 +63,10 @@ class Craft:
             text_threshold: text confidence threshold
             link_threshold: link confidence threshold
             low_text: text low-bound score
-            cuda: Use cuda for inference
             long_size: desired longest image size for inference
             refiner: enable link refiner
-            crop_type: crop regions by detected boxes or polys ("poly" or "box")
+            crop_type: crop regions by detected boxes or polys ('poly' or 'box')
+            force_device: force device to be used for inference ('cuda', 'mps', 'cpu')
         """
         self.craft_net = None
         self.refine_net = None
@@ -69,10 +76,18 @@ class Craft:
         self.text_threshold = text_threshold
         self.link_threshold = link_threshold
         self.low_text = low_text
-        self.cuda = cuda
         self.long_size = long_size
         self.refiner = refiner
         self.crop_type = crop_type
+
+        if force_device:
+            self.device = force_device if isinstance(force_device, Device) else Device(force_device)
+        elif torch.cuda.is_available():
+            self.device = Device.CUDA
+        elif torch.mps.is_available():
+            self.device = Device.MPS
+        else:
+            self.device = Device.CPU
 
         # load craftnet
         self.load_craftnet_model(weight_path_craft_net)
@@ -84,13 +99,13 @@ class Craft:
         """
         Loads craftnet model
         """
-        self.craft_net = load_craftnet_model(self.cuda, weight_path=weight_path)
+        self.craft_net = load_craftnet_model(self.device, weight_path=weight_path)
 
     def load_refinenet_model(self, weight_path: Optional[str] = None):
         """
         Loads refinenet model
         """
-        self.refine_net = load_refinenet_model(self.cuda, weight_path=weight_path)
+        self.refine_net = load_refinenet_model(self.device, weight_path=weight_path)
 
     def unload_craftnet_model(self):
         """
@@ -131,7 +146,7 @@ class Craft:
             text_threshold=self.text_threshold,
             link_threshold=self.link_threshold,
             low_text=self.low_text,
-            cuda=self.cuda,
+            device=self.device,
             long_size=self.long_size,
         )
 
@@ -166,6 +181,7 @@ class Craft:
                     image=image,
                     regions=regions,
                     times = prediction_result["times"],
+                    device = self.device,
                     heatmaps=prediction_result["heatmaps"],
                     file_name=file_name,
                     output_dir=self.output_dir,

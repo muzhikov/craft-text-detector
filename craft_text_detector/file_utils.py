@@ -5,6 +5,7 @@ import cv2
 import gdown
 import numpy as np
 
+from craft_text_detector import Device
 from craft_text_detector.image_utils import read_image
 
 
@@ -206,6 +207,7 @@ def export_extra_results(
     regions,
     heatmaps,
     times,
+    device: Device,
     file_name: str = "image",
     output_dir="output/",
     verticals=None,
@@ -276,9 +278,10 @@ def export_extra_results(
                 )
 
     with open(times_file, "w") as f:
+        f.write(f"EXECUTED ON: {device.value}\n\n")
         for key, value in times.items():
             f.write(f"{key}: {value:.6f}\n")
-        f.write(f"TOTAL_TIME: {sum(times.values()):.6f}\n")
+        f.write(f"\nTOTAL TIME: {sum(times.values()):.6f}")
 
     # Save result image
     cv2.imwrite(res_img_file, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
