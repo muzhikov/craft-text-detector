@@ -1,13 +1,14 @@
-import os
 import time
 
 import cv2
 import numpy as np
 
-from craft_text_detector import Device
-import craft_text_detector.craft_utils as craft_utils
-import craft_text_detector.image_utils as image_utils
-import craft_text_detector.torch_utils as torch_utils
+from craft_text_detector import (
+    Device,
+    craft_utils,
+    image_utils,
+    torch_utils,
+)
 
 
 def get_prediction(

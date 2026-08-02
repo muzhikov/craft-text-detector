@@ -1,5 +1,4 @@
 import math
-import os
 from collections import OrderedDict
 from pathlib import Path
 from typing import Optional, Union
@@ -9,9 +8,7 @@ import numpy as np
 
 from huggingface_hub import hf_hub_download
 
-from craft_text_detector import Device
-import craft_text_detector.file_utils as file_utils
-import craft_text_detector.torch_utils as torch_utils
+from craft_text_detector import Device, torch_utils
 
 HF_REPO = 'muzhikov/CRAFT-text-detector'
 
